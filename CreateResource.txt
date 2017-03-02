@@ -1,0 +1,59 @@
+# Azure Storage Management Sample - Demonstrates how to create and manage storage accounts.
+
+$CredentialAssetName = "mg031665"
+     
+    #Get the credential with the above name from the Automation Asset store 
+    $Cred = Get-AutomationPSCredential -Name $CredentialAssetName 
+    if(!$Cred) { 
+        Throw "Could not find an Automation Credential Asset named '${CredentialAssetName}'. Make sure you have created one in this Automation Account." 
+    } 
+ 
+    #Connect to your Azure Account        
+    Add-AzureRmAccount -Credential $Cred
+
+Write-Output "Connected to the Azure Account.."
+
+# Provide the name of the resource group that will be created.
+$ResourceGroupName="testautorg"
+
+# Provide the name of the Storage account that will be created.
+$StorageAccountName="testautosa"
+
+# Specify the type of Storage account to create and another type that will be used for updating the Storage account. Valid values are:
+  # Standard_LRS (locally-redundant storage)
+  # Standard_ZRS (zone-redundant storage)
+  # Standard_GRS (geo-redundant storage)
+  # Standard_RAGRS (read access geo-redundant storage)
+  # Premium_LRS (premium locally-redundant storage)
+$Type = "Standard_GRS"
+
+# Specify the location of the Storage account to create.
+# To view available locations for Storage, run the following command:
+  # ((Get-AzureRmResourceProvider -ProviderNamespace Microsoft.Storage).ResourceTypes | Where-Object ResourceTypeName -eq storageAccounts).Locations
+$Location = "East US"
+
+# Create new resource group
+New-AzureRmResourceGroup -Name $ResourceGroupName -Location $Location
+
+Write-Output "New Resource Group created.."
+
+# List all Storage accounts in subscription
+#Get-AzureRmStorageAccount
+
+# Check availability of a storage account name.
+$StorageAccountNameExists = Get-AzureRmStorageAccountNameAvailability -Name $StorageAccountName
+
+Write-Output "storage account $StorageAccountNameExists"
+
+If (-Not $StorageAccountNameExists.NameAvailable) {
+  Write-Output "Storage account name already taken."
+} Else {
+  #Create new Storage account.
+  New-AzureRmStorageAccount -ResourceGroupName $ResourceGroupName -Name $StorageAccountName -Type $Type -Location $Location
+
+Write-Output "New Storage Account $StorageAccountName is Created.."
+
+  # List all Storage accounts in resource group
+  #Get-AzureRmStorageAccount -ResourceGroupName $ResourceGroupName
+
+}
